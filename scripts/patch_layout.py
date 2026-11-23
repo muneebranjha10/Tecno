@@ -87,4 +87,10 @@ preview = root / "MainActivity.java"
 x = preview.read_text()
 assert "}, 8500);" in x
 preview.write_text(x.replace("}, 8500);", "}, 16000);", 1))
-print("Applied square-ring fix, center captions, and Tecno timing.")
+manifest = Path("TecnoSpark40_LSPosed_Port/app/src/main/AndroidManifest.xml")
+xml = manifest.read_text()
+needle = '<meta-data android:name="xposedmodule" android:value="true" />'
+assert needle in xml
+xml = xml.replace(needle, needle + '\n        <meta-data android:name="xposedscope" android:value="com.android.systemui" />', 1)
+manifest.write_text(xml)
+print("Applied square ring, centered captions, and recommended SystemUI LSPosed scope.")
