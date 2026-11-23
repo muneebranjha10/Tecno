@@ -1,0 +1,59 @@
+name: Build Tecno Spark 40 LSPosed APK
+
+on:
+  push:
+    paths:
+      - 'TecnoSpark40_LSPosed_Source_Alpha.zip'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify uploaded archive
+        run: |
+          if [ ! -f TecnoSpark40_LSPosed_Source_Alpha.zip ]; then
+            echo "::error::Upload TecnoSpark40_LSPosed_Source_Alpha.zip to the repository root first"
+            exit 1
+          fi
+          unzip -tq TecnoSpark40_LSPosed_Source_Alpha.zip
+
+      - name: Extract source
+        run: |
+          unzip -q TecnoSpark40_LSPosed_Source_Alpha.zip
+          test -f TecnoSpark40_LSPosed_Port/settings.gradle
+          test -f TecnoSpark40_LSPosed_Port/app/src/main/assets/charge/entry.webp
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android platform
+        run: sdkmanager --install 'platforms;android-35' 'build-tools;35.0.0'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Build debug APK
+        working-directory: TecnoSpark40_LSPosed_Port
+        run: gradle --no-daemon :app:assembleDebug
+
+      - name: Upload installable APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tecno-Spark40-Charge-LSPosed-APK
+          path: TecnoSpark40_LSPosed_Port/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
